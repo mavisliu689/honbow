@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新年紅包</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #880000;
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            background: #FF0000;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            border: 2px solid #FFD700;
+        }
+        h1 {
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin: 0 0 20px 0;
+        }
+        .red-packet {
+            background: #FF0000;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+        }
+        #scratchCard {
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            margin: 10px 0;
+            background: #FF0000;
+        }
+        .decoration {
+            position: absolute;
+            font-size: 24px;
+            color: #FFD700;
+        }
+        .top-left {
+            top: -10px;
+            left: -10px;
+        }
+        .top-right {
+            top: -10px;
+            right: -10px;
+        }
+        .bottom-left {
+            bottom: -10px;
+            left: -10px;
+        }
+        .bottom-right {
+            bottom: -10px;
+            right: -10px;
+        }
+        #prize {
+            font-size: 28px;
+            margin: 20px 0;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 開運紅包 💰</h1>
+        <div class="red-packet">
+            <span class="decoration top-left">囍</span>
+            <span class="decoration top-right">福</span>
+            <span class="decoration bottom-left">恭</span>
+            <span class="decoration bottom-right">喜</span>
+            <canvas id="scratchCard" width="300" height="150"></canvas>
+        </div>
+        <div id="prize"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('scratchCard');
+        const ctx = canvas.getContext('2d');
+        const prizeElement = document.getElementById('prize');
+        let isDrawing = false;
+        let revealed = false;
+        
+        const prizes = [3, 33, 333, 33.33];
+        let currentPrize = prizes[Math.floor(Math.random() * prizes.length)];
+
+        function initCard() {
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // 清空並設置背景
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 繪製金色邊框
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(5, 5, canvas.width-10, canvas.height-10);
+            
+            // 繪製獎金文字
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 40px Microsoft JhengHei';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${currentPrize} 元`, canvas.width/2, canvas.height/2);
+            
+            // 添加裝飾性文字
+            ctx.font = 'bold 20px Microsoft JhengHei';
+            ctx.fillText('恭喜發財', canvas.width/2, 30);
+            ctx.fillText('大吉大利', canvas.width/2, canvas.height-30);
+            
+            // 覆蓋刮刮層
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 設置提示文字
+            ctx.fillStyle = '#FF0000';
+            ctx.font = 'bold 24px Microsoft JhengHei';
+            ctx.fillText('刮刮看', canvas.width/2, canvas.height/2);
+        }
+
+        function scratch(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 計算已刮開的面積
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparent = 0;
+            
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] === 0) transparent++;
+            }
+            
+            const percentRevealed = (transparent / (canvas.width * canvas.height)) * 100;
+            
+            if (percentRevealed > 50 && !revealed) {
+                revealed = true;
+                prizeElement.textContent = `恭喜發財！獲得 ${currentPrize} 元！`;
+                // 播放慶祝動畫
+                celebrate();
+            }
+        }
+
+        function celebrate() {
+            const emojis = ['🧧', '💰', '✨', '🎊'];
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 20; i++) {
+                const emoji = document.createElement('div');
+                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                emoji.style.position = 'absolute';
+                emoji.style.left = Math.random() * 100 + '%';
+                emoji.style.top = -20 + 'px';
+                emoji.style.fontSize = '24px';
+                emoji.style.animation = `fall ${Math.random() * 2 + 1}s linear forwards`;
+                document.body.appendChild(emoji);
+                
+                setTimeout(() => emoji.remove(), 3000);
+            }
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            scratch(e);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // 添加動畫樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 事件監聽
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+        
+        // 觸控支援
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startDrawing(e);
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            scratch(e);
+        });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // 初始化
+        initCard();
+    </script>
+</body>
+</html>
